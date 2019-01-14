@@ -18,7 +18,7 @@ class EsouiPluginSource(fetcher.PluginSource):
         return EsouiItem()
 
     def fetchMetaData(self, item):
-        url = "http://www.esoui.com/downloads/info%s.html" % (item.id)
+        url = "https://www.esoui.com/downloads/info%s.html" % (item.id)
         self.log.info("fetching %s" % (url))
 
         buffer = StringIO()
@@ -37,7 +37,7 @@ class EsouiPluginSource(fetcher.PluginSource):
         return metaItem
 
     def fetchPlugin(self, item):
-        url =  "http://cdn.esoui.com/downloads/file%s/" % (item.id)
+        url =  "https://cdn.esoui.com/downloads/file%s/" % (item.id)
         self.log.info("fetching %s" % (url))
         
         buffer = StringIO()
@@ -84,15 +84,22 @@ class EsouiBinary(fetcher.PluginBinary):
                 raise Exception("zip is breaking out its directory")
             toplevel[parts[0]] = parts[0]
             base = parts[0]
-            
+
+        pluginPath = os.path.join(dest, base)
         if len(toplevel) > 1:
-            raise Exception("looks like the archive has multiple directories")
+            # raise Exception("looks like the archive has multiple directories")
+            self.log.warning("looks like the archive has multplie directories. relocate to %s" % (dest))
+            dest = os.path.join(dest, self.item.title.title().replace(" ", ""))
+            pluginPath = dest
+            try:
+                os.makedirs(pluginPath)
+            except:
+                pass
 
         if self.item.path and os.path.exists(self.item.path):
             self.log.info("cleanup %s" % (self.item.path))
             shutil.rmtree(self.item.path)
 
-        pluginPath = os.path.join(dest, base)
         if os.path.exists(pluginPath):
             self.log.info("cleanup %s" % (pluginPath))
             shutil.rmtree(pluginPath)
@@ -102,8 +109,4 @@ class EsouiBinary(fetcher.PluginBinary):
 
         zip.extractall(dest)
         return pluginPath
-
-
-
-
     
